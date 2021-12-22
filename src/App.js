@@ -1,8 +1,9 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import Counter from "./components/Counter";
 import PostList from "./components/PostList";
 import PostForm from './components/PostForm';
 import MySelect from "./components/UI/select/MySelect";
+import MyInput from "./components/UI/input/MyInput";
 
 import './styles/App.css';
 
@@ -27,27 +28,44 @@ function App() {
   ]);
 
   const [selectedSort, setSelectedSort] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const sortedPosts = useMemo(() => {
+    console.log('Get posts');
+    if(selectedSort) {
+      return [...posts].sort((a, b) => a[selectedSort].localeCompare(b[selectedSort]));
+    }
+    return posts;
+  }, [selectedSort, posts]);
+
+  const sortedAndSearchedPosts = useMemo(() => {
+    return sortedPosts.filter(post => post.title.toLocaleLowerCase().includes(searchQuery))
+  }, [ searchQuery, sortedPosts])
 
   const createPost = (newPost) => {
     setPosts([...posts, newPost]);
   }
 
   const removePost = (post) => {
-    console.log(post);
     setPosts(posts.filter(p => p.id !== post.id))
   }
 
   const sortPosts = (sort) => {
     setSelectedSort(sort);
-    setPosts([...posts].sort((a, b) => a[sort].localeCompare(b[sort])))
   }
 
   return (
     <div className="App">
-      <Counter/>
+      
       <PostForm create={createPost}/>
+      <Counter/>
       <hr style={{margin: '15px'}}/>
       <div>
+        <MyInput 
+          placeholder="Search..." 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
         <MySelect
           defaultValue="Sort by"
           value={selectedSort}
@@ -58,9 +76,10 @@ function App() {
           ]}
         />
       </div>
-      {posts.length
+      
+      {sortedAndSearchedPosts.length
         ? 
-        <PostList remove={removePost} posts={posts} title={"Список постов:"}/> 
+        <PostList remove={removePost} posts={sortedAndSearchedPosts} title={"Список постов:"}/> 
         :
         <h1 style={{textAlign:'center'}}>
           Список постов пуст.
