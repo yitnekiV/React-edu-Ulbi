@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 
 import './styles/App.css';
 
-import Counter from "./components/Counter";
 import PostList from "./components/PostList";
 import PostForm from './components/PostForm';
 import PostFilter from "./components/PostFilter";
@@ -11,15 +10,20 @@ import MyButton from "./components/UI/button/MyButton";
 import { usePosts } from "./hooks/usePost";
 import PostService from "./API/PostService";
 import Loader from "./components/UI/Loader/Loader";
+import { useFetching } from "./hooks/useFetching";
 
 
 
 function App() {
-  const  [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState([]);
   const [filter, setFilter] = useState({sort: '', query: ''});
   const [modal, setModal] = useState(false);
   const sortedAndSearchedPosts = usePosts(posts, filter.sort, filter.query);
-  const [isPostsLoading, setisPostsLoading] = useState(false);
+
+  const [fetchPosts, isPostsLoading, postError] = useFetching(async () => {
+    const posts = await PostService.getAll();
+    setPosts(posts);
+  })
 
   useEffect(() => {
     fetchPosts();
@@ -28,15 +32,6 @@ function App() {
   const createPost = (newPost) => {
     setPosts([...posts, newPost]);
     setModal(false);
-  }
-
-  async function fetchPosts() {
-    setisPostsLoading(true);
-    setTimeout(async () => {
-      const posts = await PostService.getAll();
-      setPosts(posts);
-      setisPostsLoading(false);
-    }, 1000);
   }
 
   const removePost = (post) => {
@@ -61,6 +56,10 @@ function App() {
         filter={filter}
         setFilter={setFilter}
       />
+
+      {postError &&
+        <h1>Произошла ошибка ${postError}</h1>
+      }
 
       {isPostsLoading
         ? <Loader />
