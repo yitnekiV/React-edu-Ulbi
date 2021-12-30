@@ -67,3 +67,8 @@
 .navbar__links {
   margin-left: auto;
 }
+
+.post__btns {
+  display: flex;
+  padding-left: 5px;
+}
